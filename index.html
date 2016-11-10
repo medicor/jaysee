@@ -32,16 +32,33 @@
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.deep_purple-deep_orange.min.css">
 	<style type="text/css">
-		@media screen and (min-width: 1024px) {
-			body {
-				zoom: 125%
-			}
-		}
 		html,
 		body {
 		  font-family: 'Roboto', 'Helvetica', sans-serif;
 		}
-
+		@media screen and (min-width: 1024px) {
+			/*
+			#content {
+				transform-origin: 0 0;
+				transform: scale(1.25)
+			}
+			*/
+			.mdl-data-table, .mdl-data-table th ,.mdl-data-table td {
+				font-size: medium;
+			}
+		}
+		.wrapper {
+			overflow: hidden;
+			position: relative;
+			opacity: 0;
+			height: 0;
+			transition: all 0.2s ease-out;
+		}
+		.wrapper.expanded {
+			opacity: 1;
+			height: 100%;
+			transition: all 0.2s;
+		}
 		.is-leaf {
 			font-weight: 500;
 			width: 90px;
@@ -49,15 +66,20 @@
 		.is-node {
 			width: 100%;
 		}
-
 		.mdl-layout__header-row {
 			padding: 0 20px;
 		}
 		.mdl-layout__content {
 			padding: 20px;
 		}
+		.mdl-data-table th {
+			cursor: pointer;
+		}
 		.mdl-data-table td {
-			vertical-align: baseline;
+			vertical-align: top;
+		}
+		.mdl-button {
+			margin-right: 10px;
 		}
 	</style>
 	<script>
@@ -80,7 +102,7 @@
 
 <body>
 	<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-		<header class="mdl-layout__header">
+		<header id="header" class="mdl-layout__header">
 			<div class="mdl-layout__header-row">
 				<span class="mdl-layout-title">Jaysee</span>
 				<div class="mdl-layout-spacer"></div>
@@ -93,53 +115,62 @@
 				</ul>
 			</div>
 		</header>
-		<main id="dump" class="mdl-layout__content">
+		<main id="content" class="mdl-layout__content">
 			<object-dump :model="root"></object-dump>
 		</main>
 	</div>
   	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.2/axios.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.0.5/vue.js"></script>
 	<script src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+	<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
 	<script>
 		! function() { /* global axios,Vue */
 			'use strict';
 			let collection = [];
 
 			function objectToArray(o) {
-				return Object.keys(o).map((k) => (
-					Object.prototype.toString.call(o[k]) === '[object Object]'
+				return Object.keys(o).map(function(k) {
+					return Object.prototype.toString.call(o[k]) === '[object Object]'
 						? [k, objectToArray(o[k])]
-						: [k, o[k]]
-				));
+						: [k, o[k]];
+				});
 			}
 
 			Vue.component('object-dump', {
-				template: `
-					<table class="mdl-data-table mdl-js-data-table">
-						<tbody>
-							<tr v-for="(item, index) in model">
-								<td class="mdl-data-table__cell--non-numeric">
-									<button v-if="!isLeaf(item[1])" @click="toggle(index)" class="mdl-button mdl-js-button mdl-button--icon">
-										<i class="material-icons">add</i>
-									</button>
-									{{item[0]}}
-								</td>
-								<td v-if="isLeaf(item[1])" class="mdl-data-table__cell--non-numeric is-leaf">
-									{{item[1] | format}}
-								</td>
-								<td v-else class="mdl-data-table__cell--non-numeric">
-									<object-dump v-show="open" class="is-node" :model="item[1]"></object-dump>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				`,
+				template: ''
+					+'<table class="mdl-data-table mdl-js-data-table">'
+						+'<thead>'
+							+'<tr>'
+								+'<th @click="sort" :class="getSorter(0)">Key</th>'
+								+'<th @click="sort" :class="getSorter(1)">Value</th>'
+							+'</tr>'
+						+'</thead>'
+						+'<tbody>'
+							+'<tr v-for="(item, index) in model">'
+								+'<td class="mdl-data-table__cell--non-numeric">'
+									+'<button v-if="!isLeaf(item[1])" @click="toggle(index)" class="mdl-button mdl-js-button mdl-button--icon">'
+										+'<i class="material-icons">{{ isOpen(index) ? "remove" : "add" }}</i>'
+									+'</button>'
+									+'{{ item[0] }}'
+								+'</td>'
+								+'<td v-if="isLeaf(item[1])" class="mdl-data-table__cell--non-numeric is-leaf">'
+									+'{{ item[1] | format }}'
+								+'</td>'
+								+'<td v-else class="mdl-data-table__cell--non-numeric">'
+									+'<div class="wrapper" :class="{ expanded: isOpen(index) }" >'
+										+'<object-dump class="is-node" :model="item[1]"></object-dump>'
+									+'</div>'
+								+'</td>'
+							+'</tr>'
+						+'</tbody>'
+					+'</table>',
 				props: {
 					model: Array
 				},
 				data: function() {
 					return {
-						open: true
+						openMap: {}, // Hash map with indices of open nodes.
+						sortMap: {}  // Current sort order of table (key or value, ascending or descending).
 					};
 				},
 				filters: {
@@ -151,17 +182,32 @@
 				},
 				methods: {
 					toggle: function(anIndex) {
-console.log(arguments);
-						this.open = !this.open;
+						// Use Vue.set to let observer observe.
+						Vue.set(this.openMap, anIndex, !this.openMap[anIndex]);
 					},
-					isLeaf: function(anItem) {
-						return Object.prototype.toString.call(anItem) !== '[object Array]';
+					isOpen: function(anIndex) {
+						return this.openMap[anIndex];
+					},
+					isLeaf: function(anObject) {
+						return Object.prototype.toString.call(anObject) !== '[object Array]';
+					},
+					sort: function() {
+						console.log(this.model);
+					},
+					getSorter: function(aColumn) {
+						return 'mdl-data-table__cell--non-numeric mdl-data-table__header--sorted-ascending';
 					}
+					// {{this.sortMap.column === "k" ? (this.sortMap.ascending ? "": ""}}
 				}
 			});
 
+
+			//TODO: finish sorting by key and value.
 			//TODO: insert the value of `call` query parameter here.
 			//TODO: use cloud.medicor.se as a reverse proxy to avoid CORS problems.
+			//TODO: filter box, filter by all attributes?
+			
+			
 //			axios.get('http://jsfiddle.net/api/user/medicor/demo/list.json?limit=100')
 			axios.get('http://stratum.registercentrum.se/api/aggregate/LVR/Visit/total/share(BodyMassIndex(null))/county(VisitUnit)/VisitUnit?apikey=bK3H9bwaG4o=')
 				.then(function(aResponse) {
@@ -172,7 +218,7 @@ console.log(arguments);
 						: rd;
 
 					new Vue({
-						el: '#dump',
+						el: '#content',
 						data: {
 							root: collection
 						}
