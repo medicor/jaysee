@@ -141,8 +141,8 @@
 					+'<table class="mdl-data-table mdl-js-data-table">'
 						+'<thead>'
 							+'<tr>'
-								+'<th @click="sort" :class="getSorter(0)">Key</th>'
-								+'<th @click="sort" :class="getSorter(1)">Value</th>'
+								+'<th @click="sort(0)" :class="getSorter(0)">Key</th>'
+								+'<th @click="sort(1)" :class="getSorter(1)">Value</th>'
 							+'</tr>'
 						+'</thead>'
 						+'<tbody>'
@@ -170,7 +170,8 @@
 				data: function() {
 					return {
 						openMap: {}, // Hash map with indices of open nodes.
-						sortMap: {}  // Current sort order of table (key or value, ascending or descending).
+						sortMap: {}, // Current sort order of table (key or value, ascending or descending).
+						original: this.model.slice() // Copy used for restoring unsorted model.
 					};
 				},
 				filters: {
@@ -191,23 +192,46 @@
 					isLeaf: function(anObject) {
 						return Object.prototype.toString.call(anObject) !== '[object Array]';
 					},
-					sort: function() {
-						console.log(this.model);
+					sort: function(aColumn) {
+						var self = this;
+
+						Vue.set(this.sortMap, aColumn, this.sortMap[aColumn] === true ? false : (this.sortMap[aColumn] === false ? null : true));
+						Vue.set(this.sortMap, aColumn + 1 % 2, null);
+						if (this.sortMap[aColumn] === null) {
+							// Must use Vue wrapped mutating array functions to avoud warning.
+							Array.prototype.splice.apply(this.model, [0,this.model.length].concat(this.original));
+						} else {
+							//this.original = this.original || this.model.slice();
+							this.model.sort(function(a,b) {
+								if (a[aColumn] < b[aColumn]) return self.sortMap[aColumn] ? -1 : +1;
+								if (a[aColumn] > b[aColumn]) return self.sortMap[aColumn] ? +1 : -1;
+								return 0;
+							});
+						}
 					},
 					getSorter: function(aColumn) {
-						return 'mdl-data-table__cell--non-numeric mdl-data-table__header--sorted-ascending';
+						var sc = 'mdl-data-table__cell--non-numeric ';
+
+						switch(this.sortMap[aColumn]) {
+							case true:
+								sc += 'mdl-data-table__header--sorted-ascending';
+								break;
+							case false:
+								sc += 'mdl-data-table__header--sorted-descending';
+								break;
+						}
+						return sc;
 					}
-					// {{this.sortMap.column === "k" ? (this.sortMap.ascending ? "": ""}}
 				}
 			});
 
 
-			//TODO: finish sorting by key and value.
 			//TODO: insert the value of `call` query parameter here.
 			//TODO: use cloud.medicor.se as a reverse proxy to avoid CORS problems.
 			//TODO: filter box, filter by all attributes?
-			
-			
+			//TODO: display api string (formated?)
+
+
 //			axios.get('http://jsfiddle.net/api/user/medicor/demo/list.json?limit=100')
 			axios.get('http://stratum.registercentrum.se/api/aggregate/LVR/Visit/total/share(BodyMassIndex(null))/county(VisitUnit)/VisitUnit?apikey=bK3H9bwaG4o=')
 				.then(function(aResponse) {
