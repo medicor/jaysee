@@ -52,18 +52,18 @@
 			position: relative;
 			opacity: 0;
 			height: 0;
-			transition: all 0.2s ease-out;
+			transition: all 0.20s ease-out;
 		}
 		.wrapper.expanded {
 			opacity: 1;
 			height: 100%;
-			transition: all 0.2s;
+			transition: all 0.15s;
 		}
-		.is-leaf {
+		.cell-leaf {
 			font-weight: 500;
 			width: 90px;
 		}
-		.is-node {
+		.cell-node {
 			width: 100%;
 		}
 		.mdl-layout__header-row {
@@ -116,7 +116,9 @@
 			</div>
 		</header>
 		<main id="content" class="mdl-layout__content">
-			<object-dump :model="root"></object-dump>
+			<dump-table :model="root">
+				<dump-row v-for="child in root" :model="child"></dump-row>
+			</dump-table>
 		</main>
 	</div>
   	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.2/axios.min.js"></script>
@@ -136,80 +138,56 @@
 				});
 			}
 
-			Vue.component('object-dump', {
+			function queryToObject(s) {
+				return s && s.replace('?', '').split('&').reduce(function(pv, cv) {
+				 	return Object.assign(pv, cv.split('=').reduce(function(a,b) {
+				 		return Object.defineProperty({}, a, { value: b, enumerable: true });
+				 	}));
+				},{});
+			}
+
+			Vue.component('dump-table', {
 				template: ''
 					+'<table class="mdl-data-table mdl-js-data-table">'
-						+'<thead>'
+						+'<thead v-if="this.$parent.$parent">' // Not on root element
 							+'<tr>'
-								+'<th @click="sort(0)" :class="getSorter(0)">Key</th>'
-								+'<th @click="sort(1)" :class="getSorter(1)">Value</th>'
+								+'<th @click="sort(0)" :class="getSortClass(0)">Key</th>'
+								+'<th @click="sort(1)" :class="getSortClass(1)">Value</th>'
 							+'</tr>'
 						+'</thead>'
 						+'<tbody>'
-							+'<tr v-for="(item, index) in model">'
-								+'<td class="mdl-data-table__cell--non-numeric">'
-									+'<button v-if="!isLeaf(item[1])" @click="toggle(index)" class="mdl-button mdl-js-button mdl-button--icon">'
-										+'<i class="material-icons">{{ isOpen(index) ? "remove" : "add" }}</i>'
-									+'</button>'
-									+'{{ item[0] }}'
-								+'</td>'
-								+'<td v-if="isLeaf(item[1])" class="mdl-data-table__cell--non-numeric is-leaf">'
-									+'{{ item[1] | format }}'
-								+'</td>'
-								+'<td v-else class="mdl-data-table__cell--non-numeric">'
-									+'<div class="wrapper" :class="{ expanded: isOpen(index) }" >'
-										+'<object-dump class="is-node" :model="item[1]"></object-dump>'
-									+'</div>'
-								+'</td>'
-							+'</tr>'
+							+'<slot></slot>'
 						+'</tbody>'
-					+'</table>',
+					+'</table>'
+					,
 				props: {
 					model: Array
 				},
 				data: function() {
 					return {
-						openMap: {}, // Hash map with indices of open nodes.
-						sortMap: {}, // Current sort order of table (key or value, ascending or descending).
+						sortMap: {}, // Current sort order of table (key=0/value=1, ascending=true/descending=false/original=null).
 						original: this.model.slice() // Copy used for restoring unsorted model.
 					};
 				},
-				filters: {
-					format: function(aValue) {
-						return aValue && aValue < 1
-							? aValue.toFixed(3)
-							: aValue;
-					}
-				},
 				methods: {
-					toggle: function(anIndex) {
-						// Use Vue.set to let observer observe.
-						Vue.set(this.openMap, anIndex, !this.openMap[anIndex]);
-					},
-					isOpen: function(anIndex) {
-						return this.openMap[anIndex];
-					},
-					isLeaf: function(anObject) {
-						return Object.prototype.toString.call(anObject) !== '[object Array]';
-					},
 					sort: function(aColumn) {
 						var self = this;
 
-						Vue.set(this.sortMap, aColumn, this.sortMap[aColumn] === true ? false : (this.sortMap[aColumn] === false ? null : true));
-						Vue.set(this.sortMap, aColumn + 1 % 2, null);
+						Vue.set(this.sortMap,  aColumn, this.sortMap[aColumn] === true ? false : (this.sortMap[aColumn] === false ? null : true)); // Toggle true-false-null.
+						Vue.set(this.sortMap, (aColumn + 1) % 2, null); // Set other column to "unsorted".
 						if (this.sortMap[aColumn] === null) {
-							// Must use Vue wrapped mutating array functions to avoud warning.
-							Array.prototype.splice.apply(this.model, [0,this.model.length].concat(this.original));
+							// Circumvention since it is invalid to mutate an entire property (ie. `this.model = this.original`).
+							Array.prototype.splice.apply(this.model, [0,this.model.length].concat(this.original)); 
+							this.model.splice(this.model.length); // To get Vue to react.
 						} else {
-							//this.original = this.original || this.model.slice();
 							this.model.sort(function(a,b) {
-								if (a[aColumn] < b[aColumn]) return self.sortMap[aColumn] ? -1 : +1;
-								if (a[aColumn] > b[aColumn]) return self.sortMap[aColumn] ? +1 : -1;
-								return 0;
+								return self.sortMap[aColumn] // = ascending
+									? a[aColumn].toLocaleString().localeCompare(b[aColumn].toLocaleString())
+									: b[aColumn].toLocaleString().localeCompare(a[aColumn].toLocaleString())
 							});
 						}
 					},
-					getSorter: function(aColumn) {
+					getSortClass: function(aColumn) {
 						var sc = 'mdl-data-table__cell--non-numeric ';
 
 						switch(this.sortMap[aColumn]) {
@@ -225,21 +203,69 @@
 				}
 			});
 
+			Vue.component('dump-row', {
+				template: ''
+					+'<tr>'
+						+'<td class="mdl-data-table__cell--non-numeric">'
+							+'<button v-if="!isLeaf()" @click="toggle" class="mdl-button mdl-js-button mdl-button--icon">'
+								+'<i class="material-icons">{{ open ? "remove" : "add" }}</i>'
+							+'</button>'
+							+'{{ model[0] }}'
+						+'</td>'
+						+'<td v-if="isLeaf()" class="mdl-data-table__cell--non-numeric cell-leaf">'
+							+'{{ model[1] | format }}'
+						+'</td>'
+						+'<td v-else class="mdl-data-table__cell--non-numeric">'
+							+'<div class="wrapper" :class="{ expanded: open }">'
+								+'<dump-table :model="model[1]" class="cell-node">'
+									+'<dump-row v-for="child in model[1]" :model="child"></dump-row>'
+								+'</dump-table>'
+							+'</div>'
+						+'</td>'
+					+'</tr>'
+					,
+				props: {
+					model: Array
+				},
+				data: function() {
+					return {
+						open: false
+					};
+				},
+				filters: {
+					format: function(aValue) {
+						return aValue && aValue < 1
+							? aValue.toFixed(3)
+							: aValue;
+					}
+				},
+				methods: {
+					toggle: function() {
+						this.open = !this.open;
+					},
+					isLeaf: function() {
+						return Object.prototype.toString.call(this.model[1]) !== '[object Array]';
+					}
+				}
+			});
+
 
 			//TODO: insert the value of `call` query parameter here.
-			//TODO: use cloud.medicor.se as a reverse proxy to avoid CORS problems.
 			//TODO: filter box, filter by all attributes?
-			//TODO: display api string (formated?)
+			//TODO: display + and - to expand/collapse root level.
+			//TODO: display api string (formatted?)
 
 
-//			axios.get('http://jsfiddle.net/api/user/medicor/demo/list.json?limit=100')
-			axios.get('http://stratum.registercentrum.se/api/aggregate/LVR/Visit/total/share(BodyMassIndex(null))/county(VisitUnit)/VisitUnit?apikey=bK3H9bwaG4o=')
+			axios.get('/api?call=http://jsfiddle.net/api/user/medicor/demo/list.json?limit=100')
+//			axios.get('http://stratum.registercentrum.se/api/aggregate/LVR/Visit/total/share(BodyMassIndex(null))/county(VisitUnit)/VisitUnit?apikey=bK3H9bwaG4o=')
 				.then(function(aResponse) {
 					var rd = aResponse.data.data || aResponse.data; // Response from Stratum is beneath data attribute.
+
 					// Stratums api responses are (most often) associative arrays - transform to key/value arrays.
-					collection = Object.prototype.toString.call(rd) === '[object Object]'
-						? objectToArray(rd)
-						: rd;
+					// collection = Object.prototype.toString.call(rd) === '[object Object]'
+					// 	? objectToArray(rd)
+					// 	: rd;
+					collection = objectToArray(rd);
 
 					new Vue({
 						el: '#content',
