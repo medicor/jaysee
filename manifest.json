@@ -1,8 +1,8 @@
 {
-  "short_name": "Tallyho!",
-  "name": "Tallyho!",
+  "short_name": "Jaysee",
+  "name": "Jaysee JSON visualizer",
   "display": "standalone",
-  "start_url": "/index.html",
+  "start_url": "/app.html",
   "theme_color": "#6a1b9a",
   "background_color": "#fafafa",
   "icons": [{
