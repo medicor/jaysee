@@ -24,8 +24,6 @@ Vue.component('dump-table', {
 	},
 	methods: {
 		sort(aColumn) {
-			let self = this;
-
 			Vue.set(this.sortMap,  aColumn, this.sortMap[aColumn] === true ? false : (this.sortMap[aColumn] === false ? null : true)); // Toggle true-false-null.
 			Vue.set(this.sortMap, (aColumn + 1) % 2, null); // Set other column to "unsorted".
 			if (this.sortMap[aColumn] === null) {
@@ -33,7 +31,7 @@ Vue.component('dump-table', {
 				Array.prototype.splice.apply(this.model, [0,this.model.length].concat(this.original));
 				this.model.splice(this.model.length); // To get Vue to react.
 			} else {
-				this.model.sort((a, b) => self.sortMap[aColumn] // = ascending
+				this.model.sort((a, b) => this.sortMap[aColumn] // = ascending
                     ? a[aColumn].toLocaleString().localeCompare(b[aColumn].toLocaleString())
                     : b[aColumn].toLocaleString().localeCompare(a[aColumn].toLocaleString()));
 			}

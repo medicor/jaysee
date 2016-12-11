@@ -88,7 +88,7 @@
 			</div>
 			<section id="section-filter" v-show="this.entity">
 				<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-					<input class="mdl-textfield__input" type="text" id="item-filter">
+					<input class="mdl-textfield__input" type="text" id="item-filter" v-model="filter">
 					<label class="mdl-textfield__label" for="item-filter">Filter</label>
 				</div>
 			</section>
@@ -115,7 +115,7 @@
 			'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700',
 			'https://fonts.googleapis.com/icon?family=Material+Icons',
 			'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.2.1/material.min.js',
-			'https://cdn.polyfill.io/v2/polyfill.min.js?features=es6&flags=gated',
+//			'https://cdn.polyfill.io/v2/polyfill.min.js?features=es6&flags=gated',
 		  	'https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.2/axios.min.js',
 			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.4/vue.js',
 			'library/butter.js'
@@ -135,7 +135,8 @@
 				el: '#layout',
 				data: {
 					entity: null,
-					source: null
+					source: null,
+					filter: ''
 				},
 				created() {
 					if (parameter.call) {
@@ -148,20 +149,21 @@
 					}
 				},
 				watch: {
-					source(aURL) {
-						const self = this;
-
+					source() {
 						this.entity = null;
-						axios.get(`/api?call=${aURL}`)
+						axios.get(`/api?call=${this.source}`)
 							.then(aResponse => {
-								window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(self.source)}`);
-								self.entity = Butter.objectToArray(aResponse.data.data || aResponse.data); // Transform objects (and arrays) to key/value arrays.
+								window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(this.source)}`);
+								this.entity = Butter.objectToArray(aResponse.data.data || aResponse.data); // Transform objects (and arrays) to key/value arrays.
 							})
 							.catch(anError => {
 								console.log(anError);
 								document.querySelector('#progress').style = 'display: none';
 								document.querySelector('#toaster').MaterialSnackbar.showSnackbar({ message: anError });
 							});
+					},
+					filter() {
+						console.log(this.filter);
 					}
 				}
 			});

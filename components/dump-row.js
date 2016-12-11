@@ -28,14 +28,6 @@ Vue.component('dump-row', {
 			open: false
 		};
 	},
-	filters: {
-		format(aValue) {
-			return aValue;
-			// return Number.isFinite(aValue)
-			// 	? aValue.toFixed(3)
-			// 	: aValue;
-		}
-	},
 	methods: {
 		toggle() {
 			this.open = !this.open;
