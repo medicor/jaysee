@@ -93,10 +93,10 @@
 				</div>
 			</section>
 			<section id="section-buttons" v-show="this.entity">
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" @click="more">
 					<i class="material-icons">expand_more</i>Expand
 				</button>
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" @click="less">
 					<i class="material-icons">expand_less</i>Collapse
 				</button>
 			</section>
@@ -142,10 +142,54 @@
 					if (parameter.call) {
 						this.source = decodeURIComponent(parameter.call);
 					}
+					if (!this.debouncer) {
+						 this.debouncer = Butter.debounce(this.sift);
+					}
 				},
 				methods: {
+					process(r, f) {
+						r.$children.forEach((c) => {
+							f(c);
+							this.process(c, f);
+						});
+					},
 					load() {
 						this.source = document.querySelector('#item-source').value;
+					},
+					sift() {
+						if (this.filter.length > 0) {
+							this.process(this.$children[0], (c) => {
+								if (c.$vnode.componentOptions.tag === 'dump-row') {
+									if (c.model[0].toString().toLowerCase().includes(this.filter) || c.model[1].toString().toLowerCase().includes(this.filter)) {
+										c.open = true;
+										c.show = true;
+									} else {
+										c.show = false;
+									}
+								}
+							});
+						} else {
+							this.process(this.$children[0], (c) => {
+								if (c.$vnode.componentOptions.tag === 'dump-row') {
+									c.open = false;
+									c.show = true;
+								}
+							});
+						}
+					},
+					more() {
+						this.process(this.$children[0], (c) => {
+							if (c.$vnode.componentOptions.tag === 'dump-row') {
+								c.open = true;
+							}
+						});
+					},
+					less () {
+						this.process(this.$children[0], (c) => {
+							if (c.$vnode.componentOptions.tag === 'dump-row') {
+								c.open = false;
+							}
+						});
 					}
 				},
 				watch: {
@@ -163,7 +207,7 @@
 							});
 					},
 					filter() {
-						console.log(this.filter);
+						this.debouncer();
 					}
 				}
 			});

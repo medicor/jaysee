@@ -1,7 +1,7 @@
 /* global Vue */
 Vue.component('dump-row', {
 	template: `
-		<tr>
+		<tr v-show="show">
 			<td class="mdl-data-table__cell--non-numeric">
 				<button v-if="!isLeaf()" @click="toggle" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
 					<i class="material-icons">{{ open ? "expand_less" : "expand_more" }}</i>
@@ -25,7 +25,8 @@ Vue.component('dump-row', {
 	},
 	data() {
 		return {
-			open: false
+			open: false,
+			show: true
 		};
 	},
 	methods: {
