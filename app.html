@@ -56,47 +56,29 @@
 </head>
 
 <body>
-	<div id="layout" class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-		<header id="header" class="mdl-layout__header">
-			<div class="mdl-layout__header-row">
-				<div id="title" class="mdl-layout-title"></div>
-				<div class="mdl-layout-spacer"></div>
+	<div id="layout">
+		<header id="header">
+			<div>
 				<section id="section-source">
-					<div class="mdl-textfield mdl-js-textfield">
-						<input class="mdl-textfield__input" type="text" spellcheck="false" id="item-source" :value="source" @keyup.13="load">
-						<label class="mdl-textfield__label" for="item-source">Enter API URL here ...</label>
-					</div>
-					<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab" @click="load">
+					<input type="text" spellcheck="false" id="item-source" :value="source" @keyup.13="load">
+					<label for="item-source">Enter API URL here ...</label>
+					<button @click="load">
 						<i class="material-icons">refresh</i>
 					</button>
 				</section>
-				<div class="mdl-layout-spacer"></div>
-				<button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
-					<i class="material-icons">more_vert</i>
-				</button>
-				<ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
-					<li class="mdl-menu__item mdl-menu__item--full-bleed-divider">Save as JSON</li>
-					<li class="mdl-menu__item">About</li>
-				</ul>
 			</div>
 		</header>
 		<main id="content" class="mdl-layout__content">
-			<div id="progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" v-show="this.source && !this.entity"></div>
-			<div id="toaster" class="mdl-snackbar mdl-js-snackbar">
-				<div class="mdl-snackbar__text"></div>
-				<button class="mdl-snackbar__action" type="button"></button>
-			</div>
+			<div id="progress" v-show="this.source && !this.entity"></div>
 			<section id="section-filter" v-show="this.entity">
-				<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-					<input class="mdl-textfield__input" type="text" id="item-filter" v-model="filter">
-					<label class="mdl-textfield__label" for="item-filter">Filter</label>
-				</div>
+				<input type="text" id="item-filter" v-model="filter">
+				<label for="item-filter">Filter</label>
 			</section>
 			<section id="section-buttons" v-show="this.entity">
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" @click="more">
+				<button @click="more">
 					<i class="material-icons">expand_more</i>Expand
 				</button>
-				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" @click="less">
+				<button @click="less">
 					<i class="material-icons">expand_less</i>Collapse
 				</button>
 			</section>
@@ -111,11 +93,8 @@
 	<script>/* global Loader, Butter, Vue, axios */
 
 		Loader.inject([
-			'https://code.getmdl.io/1.2.1/material.deep_purple-orange.min.css',
 			'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700',
 			'https://fonts.googleapis.com/icon?family=Material+Icons',
-			'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.2.1/material.min.js',
-//			'https://cdn.polyfill.io/v2/polyfill.min.js?features=es6&flags=gated',
 		  	'https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.2/axios.min.js',
 			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.4/vue.js',
 			'library/butter.js'

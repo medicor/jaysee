@@ -1,7 +1,7 @@
 /* global Vue */
 Vue.component('dump-table', {
 	template: `
-		<table class="mdl-data-table mdl-js-data-table">
+		<table>
 			<thead v-if="this.$parent.$parent">
 				<tr>
 					<th @click="sort(0)" :class="getSortClass(0)">Key</th>
@@ -37,14 +37,14 @@ Vue.component('dump-table', {
 			}
 		},
 		getSortClass(aColumn) {
-			let sc = 'mdl-data-table__cell--non-numeric ';
+			let sc = ' ';
 
 			switch(this.sortMap[aColumn]) {
 				case true:
-					sc += 'mdl-data-table__header--sorted-ascending';
+					sc += '';
 					break;
 				case false:
-					sc += 'mdl-data-table__header--sorted-descending';
+					sc += '';
 					break;
 			}
 			return sc;
