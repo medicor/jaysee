@@ -1,3 +1,9 @@
+// class KV extends Array {
+// 	constructor(...a) {
+// 		super(...a);
+// 	}
+// }
+
 !(self => {
 
 	self.objectToArray = (o) => {
@@ -6,10 +12,23 @@
 			return [['value'],[o]];
 		}
 		return Object.keys(o).map(k => typeof o[k] === 'object'
-            ? [k, o[k] && self.objectToArray(o[k])] // Don't recurse on null or undefined.
-            : typeof o[k] === 'function'
-                ? [k, o[k].toString()] // Some formatting would be nice.
-                : [k, o[k]]);
+			? [k, o[k] && self.objectToArray(o[k])] // Don't recurse on null or undefined.
+			: typeof o[k] === 'function'
+				? [k, o[k].toString()] // Some formatting would be nice.
+				: [k, o[k]]
+		);
+	};
+
+	self.objectToKeyValue = (o) => {
+		if (typeof o !== 'object') {
+			return { 'k': 'value', 'v': o };
+		}
+		return Object.keys(o).map(k => typeof o[k] === 'object'
+			? { 'k': k, 'children': o[k] && self.objectToKeyValue(o[k]) } // Don't recurse on null or undefined.
+			: typeof o[k] === 'function'
+				? { 'k': k, 'v': o[k].toString() } // Some formatting would be nice.
+				: { 'k': k, 'v': o[k] }
+		);
 	};
 
 	self.queryToObject =

@@ -7,7 +7,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="description" content="Yet another JSON visualizer">
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
-	<meta name="theme-color" content="#673ab7">
+	<meta name="theme-color" content="#5e35b1">
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -30,11 +30,8 @@
 	<link rel="manifest" href="manifest.json">
 	<style type="text/css">
 		#layout {
+			transition: opacity 0.3s;
 			opacity: 0;
-			transition: opacity 0.5s ease-in;
-		}
-		#layout.loaded {
-			opacity: 1;
 		}
 	</style>
 	<script>
@@ -57,136 +54,129 @@
 
 <body>
 	<div id="layout">
-		<header id="header">
-			<div>
-				<section id="section-source">
-					<input type="text" spellcheck="false" id="item-source" :value="source" @keyup.13="load">
-					<label for="item-source">Enter API URL here ...</label>
-					<button @click="load">
-						<i class="material-icons">refresh</i>
-					</button>
-				</section>
-			</div>
+		<header>
+	    	<section id="section-brand">
+	    		<a href="/">
+	    			<img src="images/android-icon-48x48.png" />
+	    		</a>
+	    	</section>
+	    	<section id="section-source">
+				<input type="text" placeholder="Enter API URL here ..." spellcheck="false" id="item-source" :value="source" @keyup.13="load">
+				<button class="button" id="item-source" @click="load">
+					<i class="material-icons">refresh</i>
+				</button>
+			</section>
 		</header>
-		<main id="content" class="mdl-layout__content">
-			<div id="progress" v-show="this.source && !this.entity"></div>
-			<section id="section-filter" v-show="this.entity">
-				<input type="text" id="item-filter" v-model="filter">
-				<label for="item-filter">Filter</label>
-			</section>
-			<section id="section-buttons" v-show="this.entity">
-				<button @click="more">
-					<i class="material-icons">expand_more</i>Expand
-				</button>
-				<button @click="less">
-					<i class="material-icons">expand_less</i>Collapse
-				</button>
-			</section>
-			<section id="section-dump" v-show="this.entity">
-				<dump-table :model="entity">
-					<dump-row v-for="child in entity" :model="child"></dump-row>
-				</dump-table>
-			</section>
-		</main>
+		<main></main>
+		<progress id="progress" v-show="!this.loaded"></progress>
 	</div>
 	<script src="library/loader.js"></script>
-	<script>/* global Loader, Butter, Vue, axios */
+	<script>/* global Loader, Butter, Vue, d3 */
 
 		Loader.inject([
 			'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700',
 			'https://fonts.googleapis.com/icon?family=Material+Icons',
-		  	'https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.2/axios.min.js',
-			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.4/vue.js',
-			'library/butter.js'
-		], () => {
-			Loader.inject([
-				'app.css',
-				'components/dump-table.js',
-				'components/dump-row.js'
-			], start);
-		});
+			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.8/vue.min.js',
+			'https://d3js.org/d3.v4.js', //FIXME minify.
+			'library/butter.js',
+			'app.css'
+		], start);
 
 		function start() {
 			let parameter = Butter.queryToObject(window.location.search);
 
-			document.querySelector('#layout').className += ' loaded'; // Prevents FOUC due to PageSpeed optimizations.
-			new Vue({ // MDL needs Vue to be initiated early.
+			setInterval(function() {
+				document.querySelector('#layout').style.opacity = '1'; // Prevents FOUC due to PageSpeed optimizations.
+			});
+			new Vue({
 				el: '#layout',
 				data: {
-					entity: null,
 					source: null,
-					filter: ''
+					loaded: false
 				},
 				created() {
 					if (parameter.call) {
 						this.source = decodeURIComponent(parameter.call);
-					}
-					if (!this.debouncer) {
-						 this.debouncer = Butter.debounce(this.sift);
+					} else {
+						this.loaded = true;
 					}
 				},
 				methods: {
-					process(r, f) {
-						r.$children.forEach((c) => {
-							f(c);
-							this.process(c, f);
-						});
-					},
 					load() {
 						this.source = document.querySelector('#item-source').value;
-					},
-					sift() {
-						if (this.filter.length > 0) {
-							this.process(this.$children[0], (c) => {
-								if (c.$vnode.componentOptions.tag === 'dump-row') {
-									if (c.model[0].toString().toLowerCase().includes(this.filter) || c.model[1].toString().toLowerCase().includes(this.filter)) {
-										c.open = true;
-										c.show = true;
-									} else {
-										c.show = false;
-									}
-								}
-							});
-						} else {
-							this.process(this.$children[0], (c) => {
-								if (c.$vnode.componentOptions.tag === 'dump-row') {
-									c.open = false;
-									c.show = true;
-								}
-							});
-						}
-					},
-					more() {
-						this.process(this.$children[0], (c) => {
-							if (c.$vnode.componentOptions.tag === 'dump-row') {
-								c.open = true;
-							}
-						});
-					},
-					less () {
-						this.process(this.$children[0], (c) => {
-							if (c.$vnode.componentOptions.tag === 'dump-row') {
-								c.open = false;
-							}
-						});
 					}
 				},
 				watch: {
 					source() {
-						this.entity = null;
-						axios.get(`/api?call=${this.source}`)
-							.then(aResponse => {
-								window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(this.source)}`);
-								this.entity = Butter.objectToArray(aResponse.data.data || aResponse.data); // Transform objects (and arrays) to key/value arrays.
-							})
-							.catch(anError => {
-								console.log(anError);
-								document.querySelector('#progress').style = 'display: none';
-								document.querySelector('#toaster').MaterialSnackbar.showSnackbar({ message: anError });
+						this.loaded = false;
+						d3.select('svg').remove();
+						d3.json(`/api?call=${this.source}`, aResponse => {
+							window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(this.source)}`);
+							const container = d3.select('main').append('svg').append('g');
+							const data = Butter.objectToKeyValue(!aResponse.data ? aResponse : !aResponse.data.data ? aResponse.data : aResponse.data.data);
+							const tree = d3.tree();
+							const root = d3.hierarchy(data, (d) => {
+								return Array.isArray(d) ? d : d.children;
 							});
-					},
-					filter() {
-						this.debouncer();
+							this.loaded = true;
+							tree.nodeSize([60, 600]);
+							// tree.separation((a, b) => a.depth === 0 && b.depth === 0 ? 2 : 1);
+							tree(root);
+							container.selectAll('.node-path')
+								.data(root.descendants())
+								.enter()
+								.append('path')
+									.attr('class', 'node-path')
+									.attr('d', (d) => {
+										return !d.parent
+											? null
+											: `M${d.y},${d.x} C${(d.y + d.parent.y)/2},${d.x} ${(d.y + d.parent.y)/2},${d.parent.x} ${d.parent.y},${d.parent.x}`;
+									})
+							;
+							container.selectAll('.node-box')
+								.data(root.descendants())
+								.enter()
+								.append('rect')
+									.attr('class', 'node-box')
+									.attr('x', d => d.y-5)
+									.attr('y', d => d.x-25)
+							;
+							container.selectAll('.node-text')
+								.data(root.descendants())
+								.enter()
+								.append('text')
+									.attr('class', 'node-text')
+									.call((t) => {
+										t.append('tspan')
+											.attr('x', d => d.y+5)
+											.attr('y', d => d.x-5)
+											.text((d) => d.data.k || `${d.data.length} items`)
+										;
+										t.append('tspan')
+											.attr('x', d => d.y+5)
+											.attr('y', d => d.x+15)
+											.text((d) => d.data.v || d.data.v === 0 ? d.data.v : '')
+										;
+									})
+							;
+							const z = d3.zoom();
+							const t = d3.zoomIdentity.translate(50, window.innerHeight/2).scale(0.7);
+							container.attr('transform', t.toString());
+							d3.select('svg')
+								.append('rect')
+									.attr('width',  '100vw')
+									.attr('height', '100vh')
+									.style('fill', 'none')
+									.style('pointer-events', 'all')
+									.call(z.transform, t)
+									.call(z
+										.scaleExtent([0.1, 2])
+										.on('zoom', () => {
+											container.attr('transform', d3.event.transform);
+										})
+									)
+							;
+						});
 					}
 				}
 			});
