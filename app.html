@@ -138,7 +138,7 @@
 								.enter()
 								.append('rect')
 									.attr('class', 'node-box')
-									.attr('x', d => d.y-5)
+									.attr('x', d => d.y)
 									.attr('y', d => d.x-25)
 							;
 							container.selectAll('.node-text')
@@ -148,12 +148,12 @@
 									.attr('class', 'node-text')
 									.call((t) => {
 										t.append('tspan')
-											.attr('x', d => d.y+5)
+											.attr('x', d => d.y+10)
 											.attr('y', d => d.x-5)
 											.text((d) => d.data.k || `${d.data.length} items`)
 										;
 										t.append('tspan')
-											.attr('x', d => d.y+5)
+											.attr('x', d => d.y+10)
 											.attr('y', d => d.x+15)
 											.text((d) => d.data.v || d.data.v === 0 ? d.data.v : '')
 										;
