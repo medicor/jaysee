@@ -110,7 +110,7 @@
 					source() {
 						this.loaded = false;
 						d3.select('svg').remove();
-						d3.json(`/api?call=${this.source}`, aResponse => {
+						d3.json(this.source, aResponse => {
 							window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(this.source)}`);
 							const container = d3.select('main').append('svg').append('g');
 							const data = Butter.objectToKeyValue(!aResponse.data ? aResponse : !aResponse.data.data ? aResponse.data : aResponse.data.data);
