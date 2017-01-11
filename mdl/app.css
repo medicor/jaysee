@@ -1,0 +1,105 @@
+html,
+body {
+	font-family: 'Roboto', 'Helvetica', sans-serif;
+}
+
+.table-child {
+	position: relative;
+	overflow-y: hidden;
+	opacity: 0;
+	height: 0;
+	transition: all 0.20s ease-out;
+}
+.table-child.expanded {
+	overflow-y: visible;
+	opacity: 1;
+	height: 100%;
+	transition: all 0.15s;
+}
+.cell-leaf {
+	font-weight: 500;
+	text-align: right;
+	white-space: pre-wrap;
+}
+.mdl-layout__header-row {
+	padding: 0 20px;
+}
+.mdl-layout__content {
+	padding: 20px;
+}
+.mdl-data-table th {
+	cursor: pointer;
+}
+.mdl-data-table td {
+	vertical-align: top;
+}
+td > .mdl-button {
+	margin-right: 10px;
+}
+#content {
+	display: flex;
+	flex-flow: row wrap;
+	align-content: flex-start;
+}
+#title {
+	background: url("images/android-icon-48x48.png") no-repeat 0% 50%;
+	width: 96px;
+	height: 96px;
+}
+#section-source {
+	width: calc(100% - 220px);
+}
+#section-source > .mdl-textfield {
+	width: calc(100% - 50px);
+}
+#section-source > .mdl-textfield > .mdl-textfield__label {
+	color: rgba(255, 255, 255, 0.4);
+}
+#section-source > .mdl-textfield > .mdl-textfield__label:after {
+	background-color: rgba(255, 255, 255, 0.4);
+}
+#section-source > .mdl-button {
+	float: right;
+	margin-top: 13px;
+}
+#section-filter {
+	flex: 1 1 auto;
+	align-self: baseline;
+}
+#section-buttons {
+	flex: 1 1 auto;
+	align-self: baseline;
+	text-align: right;
+	margin-bottom: 20px;
+}
+#section-buttons > .mdl-button {
+	width: 150px;
+	text-align: left;
+}
+#section-dump {
+	flex-basis: 100%;
+	overflow-x: auto;
+}
+#progress {
+	width: 100%;
+}
+
+@media screen and (min-width: 1024px) {
+	.mdl-data-table, .mdl-data-table th ,.mdl-data-table td {
+		font-size: medium;
+	}
+}
+
+@media screen and (max-width: 640px) {
+	#title {
+		background: url("images/android-icon-36x36.png") no-repeat 50% 50%;
+		width: 36px;
+		height: 36px;
+	}
+	#section-source {
+		width: calc(100% - 100px);
+	}
+	#section-buttons {
+		text-align: left;
+	}
+}
