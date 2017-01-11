@@ -4,6 +4,7 @@ Jaysee
 Yet another JSON visualizer. Made with [Vue.js](https://vuejs.org/) and [D3](https://d3js.org/).
 
 ![Jaysee - D3](https://cdn.rawgit.com/medicor/jaysee/gh-pages/assets/jaysee-d3.png)
+[DEMO](https://medicor.github.io/jaysee/d3/app.html?call=https%3A%2F%2Fstratum.registercentrum.se%2Fapi%2Fmetadata%2Fregisters%3Fapikey%3DbK3H9bwaG4o%3D)
 
 A tiny application that visualizes the JSON response from an api call with the
 help of D3 (more specifically [`d3.tree`](https://github.com/d3/d3-hierarchy/blob/master/README.md#tree)).
