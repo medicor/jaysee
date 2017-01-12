@@ -3,6 +3,8 @@ Jaysee
 
 Yet another JSON visualizer. Made with [Vue.js](https://vuejs.org/) and [Google Material Design Lite](https://getmdl.io/started/).
 
+[![Jaysee - MDL version](https://cdn.rawgit.com/medicor/jaysee/gh-pages/assets/jaysee-mdl.png)](https://medicor.github.io/jaysee/mdl/app.html?call=https%3A%2F%2Fstratum.registercentrum.se%2Fapi%2Fmetadata%2Fregisters%3Fapikey%3DbK3H9bwaG4o%3D)
+
 A tiny application that visualizes the JSON response from an api call.
 I often feel i am missing a tool for this. Much more could be refined but other interesting things lies ahead :wink:.
 All JavaScript is in ES6 so it won't work in IE11.
