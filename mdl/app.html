@@ -116,8 +116,8 @@
 			'https://fonts.googleapis.com/icon?family=Material+Icons',
 			'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.2.1/material.min.js',
 //			'https://cdn.polyfill.io/v2/polyfill.min.js?features=es6&flags=gated',
-		  	'https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.2/axios.min.js',
-			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.4/vue.js',
+		  	'https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.3/axios.min.js',
+			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.js',
 			'library/butter.js'
 		], () => {
 			Loader.inject([
@@ -128,7 +128,7 @@
 		});
 
 		function start() {
-			let parameter = Butter.queryToObject(window.location.search);
+			const parameter = Butter.queryToObject(window.location.search);
 
 			document.querySelector('#layout').className += ' loaded'; // Prevents FOUC due to PageSpeed optimizations.
 			new Vue({ // MDL needs Vue to be initiated early.
@@ -136,7 +136,8 @@
 				data: {
 					entity: null,
 					source: null,
-					filter: ''
+					filter: '',
+					level: 1
 				},
 				created() {
 					if (parameter.call) {
@@ -147,10 +148,10 @@
 					}
 				},
 				methods: {
-					process(r, f) {
+					each(r, f) {
 						r.$children.forEach((c) => {
 							f(c);
-							this.process(c, f);
+							this.each(c, f);
 						});
 					},
 					load() {
@@ -158,9 +159,9 @@
 					},
 					sift() {
 						if (this.filter.length > 0) {
-							this.process(this.$children[0], (c) => {
+							this.each(this.$children[0], (c) => {
 								if (c.$vnode.componentOptions.tag === 'dump-row') {
-									if (c.model[0].toString().toLowerCase().includes(this.filter) || c.model[1].toString().toLowerCase().includes(this.filter)) {
+									if (c.model[0].toString().toLowerCase().includes(this.filter) || c.model[1] && c.model[1].toString().toLowerCase().includes(this.filter)) {
 										c.open = true;
 										c.show = true;
 									} else {
@@ -169,7 +170,7 @@
 								}
 							});
 						} else {
-							this.process(this.$children[0], (c) => {
+							this.each(this.$children[0], (c) => {
 								if (c.$vnode.componentOptions.tag === 'dump-row') {
 									c.open = false;
 									c.show = true;
@@ -178,14 +179,14 @@
 						}
 					},
 					more() {
-						this.process(this.$children[0], (c) => {
+						this.each(this.$children[0], (c) => {
 							if (c.$vnode.componentOptions.tag === 'dump-row') {
 								c.open = true;
 							}
 						});
 					},
 					less () {
-						this.process(this.$children[0], (c) => {
+						this.each(this.$children[0], (c) => {
 							if (c.$vnode.componentOptions.tag === 'dump-row') {
 								c.open = false;
 							}
@@ -195,10 +196,13 @@
 				watch: {
 					source() {
 						this.entity = null;
-						axios.get(this.source)
+						axios.get(`/api?call=${this.source}`)
 							.then(aResponse => {
 								window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(this.source)}`);
 								this.entity = Butter.objectToArray(aResponse.data.data || aResponse.data); // Transform objects (and arrays) to key/value arrays.
+								// Vue.nextTick(() => { // Wait until updates are through and then expand.
+								// 	this.more();
+								// });
 							})
 							.catch(anError => {
 								console.log(anError);
