@@ -1,11 +1,10 @@
 !(self => {
-	let head = document.getElementsByTagName('head')[0];
+	const head = document.getElementsByTagName('head')[0];
 
 	self.loaded = aURL => {
-        let ok = false;
-        let us = aURL.toLowerCase();
-
-        let sa = [].map.call(
+        let ok = false,
+        	us = aURL.toLowerCase(),
+        	sa = [].map.call(
                 document.scripts,
                 x => x.src
             )

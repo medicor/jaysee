@@ -37,7 +37,7 @@ Vue.component('dump-table', {
 			}
 		},
 		getSortClass(aColumn) {
-			let sc = 'mdl-data-table__cell--non-numeric ';
+			const sc = 'mdl-data-table__cell--non-numeric ';
 
 			switch(this.sortMap[aColumn]) {
 				case true:

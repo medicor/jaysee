@@ -25,7 +25,7 @@ Vue.component('dump-row', {
 	},
 	data() {
 		return {
-			open: false,
+			open: this.$parent.$parent && !this.$parent.$parent.$parent, // First level expanded default (Root / DumpTable / DumpRow).
 			show: true
 		};
 	},
