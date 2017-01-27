@@ -10,81 +10,118 @@ body {
 	height: 0;
 	transition: all 0.20s ease-out;
 }
+
 .table-child.expanded {
 	overflow-y: visible;
 	opacity: 1;
 	height: 100%;
 	transition: all 0.15s;
 }
+
 .cell-leaf {
 	font-weight: 500;
 	text-align: right;
 	white-space: pre-wrap;
 }
+
 .mdl-layout__header-row {
 	padding: 0 20px;
 }
+
 .mdl-layout__content {
 	padding: 20px;
 }
+
 .mdl-data-table th {
 	cursor: pointer;
 }
+
 .mdl-data-table td {
 	vertical-align: top;
 }
+
 td > .mdl-button {
 	margin-right: 10px;
 }
+
 #content {
 	display: flex;
 	flex-flow: row wrap;
 	justify-content: space-between;
 	align-content: flex-start;
 }
+
 #title {
 	background: url("images/android-icon-48x48.png") no-repeat 0% 50%;
 	width: 96px;
 	height: 96px;
 }
+
 #section-source {
 	width: calc(100% - 220px);
 }
+
 #section-source > .mdl-textfield {
 	width: calc(100% - 50px);
 }
-#section-source > .mdl-textfield > .mdl-textfield__label {
+
+#section-source > .mdl-textfield>.mdl-textfield__label {
 	color: rgba(255, 255, 255, 0.4);
 }
-#section-source > .mdl-textfield > .mdl-textfield__label:after {
+
+#section-source > .mdl-textfield>.mdl-textfield__label:after {
 	background-color: rgba(255, 255, 255, 0.4);
 }
+
 #section-source > .mdl-button {
 	padding-left: 20px;
 }
+
 #section-filter {
 	flex: 0 1 auto;
 	align-self: baseline;
 }
+
 #section-buttons {
 	flex: 0 1 auto;
 	align-self: baseline;
 	margin-bottom: 20px;
 }
-#section-buttons > .mdl-button {
+
+#section-buttons>.mdl-button {
 	width: 150px;
 	text-align: left;
 }
+
 #section-dump {
 	flex-basis: 100%;
 	overflow-x: auto;
 }
+
 #progress {
 	width: 100%;
 }
 
+#scrollup {
+	position: fixed;
+	right: 40px;
+	bottom: 20px;
+	/*display: none;*/
+	opacity: 0;
+	transition: opacity 1s;
+}
+
+/* MDL button icon hack */
+#scrollup > .mdl-button > .material-icons {
+	transform: none;
+	top: 17px;
+	left: 17px;
+}
+
 @media screen and (min-width: 1024px) {
-	.mdl-data-table, .mdl-data-table th ,.mdl-data-table td {
+	.mdl-data-table,
+	.mdl-data-table th,
+	.mdl-data-table td {
 		font-size: medium;
 	}
 }

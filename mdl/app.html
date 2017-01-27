@@ -80,19 +80,24 @@
 				</ul>
 			</div>
 		</header>
-		<main id="content" class="mdl-layout__content">
-			<div id="progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" v-show="this.source && !this.entity"></div>
+		<main id="content" class="mdl-layout__content" @scroll="scrolled">
+			<div id="progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" v-show="source && !entity"></div>
 			<div id="toaster" class="mdl-snackbar mdl-js-snackbar">
 				<div class="mdl-snackbar__text"></div>
 				<button class="mdl-snackbar__action" type="button"></button>
 			</div>
-			<section id="section-filter" v-show="this.entity">
+			<div id="scrollup">
+				<button class="mdl-button mdl-js-button mdl-button--fab" @click="top">
+					<i class="material-icons">arrow_upward</i>
+				</button>
+			</div>
+			<section id="section-filter" v-show="entity">
 				<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
 					<input class="mdl-textfield__input" type="text" id="item-filter" v-model="filter">
 					<label class="mdl-textfield__label" for="item-filter">Filter</label>
 				</div>
 			</section>
-			<section id="section-buttons" v-show="this.entity">
+			<section id="section-buttons" v-show="entity">
 				<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" @click="more">
 					<i class="material-icons">expand_more</i>Expand
 				</button>
@@ -100,7 +105,7 @@
 					<i class="material-icons">expand_less</i>Collapse
 				</button>
 			</section>
-			<section id="section-dump" v-show="this.entity">
+			<section id="section-dump" v-show="entity">
 				<dump-table :model="entity">
 					<dump-row v-for="child in entity" :model="child"></dump-row>
 				</dump-table>
@@ -116,6 +121,7 @@
 			'https://fonts.googleapis.com/icon?family=Material+Icons',
 			'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.2.1/material.min.js',
 //			'https://cdn.polyfill.io/v2/polyfill.min.js?features=es6&flags=gated',
+//			'https://rawgit.com/iamdustan/smoothscroll/master/dist/smoothscroll.js',
 		  	'https://cdnjs.cloudflare.com/ajax/libs/axios/0.15.3/axios.min.js',
 			'https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js',
 			'library/butter.js'
@@ -136,8 +142,7 @@
 				data: {
 					entity: null,
 					source: null,
-					filter: '',
-					level: 1
+					filter: ''
 				},
 				created() {
 					if (parameter.call) {
@@ -191,18 +196,31 @@
 								c.open = false;
 							}
 						});
+					},
+					top() {
+						// Smoothly scroll to top.
+						const scrollToTop = (anElement, aDuration) => {
+							if (aDuration <= 0) {
+								return;
+							}
+							setTimeout(() => {
+								anElement.scrollTop = anElement.scrollTop-anElement.scrollTop/aDuration*10;
+								scrollToTop(anElement, aDuration-10);
+							}, 10);
+						};
+						scrollToTop(document.querySelector('#content'), 100);
+					},
+					scrolled(anEvent) {
+						document.querySelector('#scrollup').style = anEvent.target.scrollTop > 50 ? 'opacity: 1' : '';
 					}
 				},
 				watch: {
 					source() {
 						this.entity = null;
-						axios.get(`${this.source}`)
+						axios.get(this.source)
 							.then(aResponse => {
 								window.history.pushState({}, 'Jaysee', `?call=${encodeURIComponent(this.source)}`);
 								this.entity = Butter.objectToArray(aResponse.data.data || aResponse.data); // Transform objects (and arrays) to key/value arrays.
-								// Vue.nextTick(() => { // Wait until updates are through and then expand.
-								// 	this.more();
-								// });
 							})
 							.catch(anError => {
 								console.log(anError);
